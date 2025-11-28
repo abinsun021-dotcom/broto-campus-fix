@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { FileText, LogOut, Users, Shield } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+import DashboardFooter from "@/components/DashboardFooter";
 
 export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -114,7 +115,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -133,7 +134,7 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-1">
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-1">User Management</h2>
           <p className="text-muted-foreground">Manage user roles and permissions</p>
@@ -195,6 +196,7 @@ export default function AdminDashboard() {
           </div>
         )}
       </main>
+      <DashboardFooter />
     </div>
   );
 }
