@@ -70,6 +70,7 @@ export default function Index() {
               alt="Broto-Help 24x7 Logo" 
               className="h-10 w-auto"
             />
+            <span className="font-bold text-xl text-foreground">Broto-Help 24x7</span>
           </div>
           <Button
             onClick={() => navigate("/auth")}
@@ -91,9 +92,9 @@ export default function Index() {
               />
             </div>
             <h2 className="text-5xl md:text-6xl font-bold mb-6 animate-in fade-in slide-in-from-top-6 duration-1000 delay-100">
-              24x7 Student
-              <span className="block gradient-primary bg-clip-text text-transparent">
-                Support System
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Broto-Help 24x7</span>
+              <span className="block text-foreground mt-2">
+                Student Support System
               </span>
             </h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-in fade-in slide-in-from-top-8 duration-1000 delay-200">
