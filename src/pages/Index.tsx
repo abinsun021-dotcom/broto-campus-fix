@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { FileText, Shield, Users, Clock, CheckCircle2, BarChart3 } from "lucide-react";
+import brotoHelpLogo from "@/assets/broto-help-logo.png";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -64,10 +65,11 @@ export default function Index() {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-xl font-bold">BrotoCare</h1>
+            <img 
+              src={brotoHelpLogo} 
+              alt="Broto-Help 24x7 Logo" 
+              className="h-10 w-auto"
+            />
           </div>
           <Button
             onClick={() => navigate("/auth")}
@@ -81,17 +83,21 @@ export default function Index() {
       <main>
         <section className="container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl gradient-primary mb-6 animate-in fade-in slide-in-from-top-4 duration-1000">
-              <FileText className="w-10 h-10 text-white" />
+            <div className="flex justify-center mb-6 animate-in fade-in slide-in-from-top-4 duration-1000">
+              <img 
+                src={brotoHelpLogo} 
+                alt="Broto-Help 24x7 Logo" 
+                className="h-20 w-auto"
+              />
             </div>
             <h2 className="text-5xl md:text-6xl font-bold mb-6 animate-in fade-in slide-in-from-top-6 duration-1000 delay-100">
-              Streamline Your
+              24x7 Student
               <span className="block gradient-primary bg-clip-text text-transparent">
-                Complaint Management
+                Support System
               </span>
             </h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-in fade-in slide-in-from-top-8 duration-1000 delay-200">
-              BrotoCare provides a structured, trackable, and transparent process for handling
+              Broto-Help 24x7 provides a structured, trackable, and transparent process for handling
               student complaints at Brototype. Submit, track, and resolve issues efficiently.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-top-10 duration-1000 delay-300">
@@ -144,7 +150,7 @@ export default function Index() {
           <div className="max-w-4xl mx-auto text-center gradient-card rounded-3xl p-12 shadow-xl border border-border/50">
             <h3 className="text-3xl font-bold mb-4">Ready to Get Started?</h3>
             <p className="text-muted-foreground mb-8 text-lg">
-              Join BrotoCare today and experience efficient complaint management
+              Join Broto-Help 24x7 today and experience efficient complaint management
             </p>
             <Button
               size="lg"
@@ -159,7 +165,7 @@ export default function Index() {
 
       <footer className="border-t bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-8 text-center text-muted-foreground">
-          <p>© 2025 BrotoCare. All rights reserved.</p>
+          <p>© 2025 Broto-Help 24x7. All rights reserved.</p>
         </div>
       </footer>
     </div>

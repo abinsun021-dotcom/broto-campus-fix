@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, FileText } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import brotoHelpLogo from "@/assets/broto-help-logo.png";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -75,12 +76,15 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-primary mb-4">
-            <FileText className="w-8 h-8 text-white" />
+          <div className="flex justify-center mb-4">
+            <img 
+              src={brotoHelpLogo} 
+              alt="Broto-Help 24x7 Logo" 
+              className="h-16 w-auto"
+            />
           </div>
-          <h1 className="text-3xl font-bold mb-2">BrotoCare</h1>
           <p className="text-muted-foreground">
-            Student complaint management system
+            24x7 Student Support System
           </p>
         </div>
 
