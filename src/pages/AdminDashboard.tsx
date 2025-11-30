@@ -117,9 +117,18 @@ export default function AdminDashboard() {
   const handleStatusUpdate = async (complaintId: string, newStatus: string) => {
     setUpdatingStatus(complaintId);
     try {
+      const updateData: any = { 
+        status: newStatus as "open" | "in_progress" | "resolved" | "closed" 
+      };
+      
+      // Include resolution note if provided
+      if (updateNote.trim()) {
+        updateData.resolution_note = updateNote.trim();
+      }
+
       const { error: updateError } = await supabase
         .from("complaints")
-        .update({ status: newStatus as "open" | "in_progress" | "resolved" | "closed" })
+        .update(updateData)
         .eq("id", complaintId);
 
       if (updateError) throw updateError;
@@ -406,6 +415,27 @@ export default function AdminDashboard() {
                           {complaint.description}
                         </p>
                       </div>
+
+                      {/* Resolution Info */}
+                      {complaint.resolved_at && (
+                        <div className="bg-green-500/5 border border-green-500/20 p-3 rounded-lg">
+                          <div className="flex items-center gap-2 text-green-600 mb-2">
+                            <CheckCircle className="w-4 h-4" />
+                            <span className="text-sm font-medium">Resolution Details</span>
+                          </div>
+                          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                            {complaint.resolved_by && (
+                              <span>Resolved by: {complaint.resolved_by}</span>
+                            )}
+                            <span>On: {format(new Date(complaint.resolved_at), "MMM dd, yyyy HH:mm")}</span>
+                          </div>
+                          {complaint.resolution_note && (
+                            <p className="text-sm text-muted-foreground mt-2 bg-background/50 p-2 rounded">
+                              {complaint.resolution_note}
+                            </p>
+                          )}
+                        </div>
+                      )}
 
                       {/* Status Update */}
                       <div className="bg-muted/30 p-4 rounded-lg space-y-3">

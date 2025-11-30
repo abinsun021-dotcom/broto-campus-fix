@@ -223,6 +223,9 @@ export default function StudentDashboard() {
                 complaint={complaint}
                 getStatusColor={getStatusColor}
                 getStatusIcon={getStatusIcon}
+                showManage={true}
+                userRole="student"
+                onUpdate={() => user && fetchComplaints(user.id)}
               />
             ))}
           </div>

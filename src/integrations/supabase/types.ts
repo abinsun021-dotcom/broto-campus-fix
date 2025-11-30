@@ -96,6 +96,44 @@ export type Database = {
           },
         ]
       }
+      complaint_history: {
+        Row: {
+          changed_by: string
+          complaint_id: string
+          created_at: string
+          id: string
+          new_status: string
+          note: string | null
+          old_status: string | null
+        }
+        Insert: {
+          changed_by: string
+          complaint_id: string
+          created_at?: string
+          id?: string
+          new_status: string
+          note?: string | null
+          old_status?: string | null
+        }
+        Update: {
+          changed_by?: string
+          complaint_id?: string
+          created_at?: string
+          id?: string
+          new_status?: string
+          note?: string | null
+          old_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complaint_history_complaint_id_fkey"
+            columns: ["complaint_id"]
+            isOneToOne: false
+            referencedRelation: "complaints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       complaints: {
         Row: {
           assigned_to: string | null
@@ -105,6 +143,9 @@ export type Database = {
           id: string
           priority: Database["public"]["Enums"]["complaint_priority"]
           reporter_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
           status: Database["public"]["Enums"]["complaint_status"]
           title: string
           updated_at: string
@@ -117,6 +158,9 @@ export type Database = {
           id?: string
           priority?: Database["public"]["Enums"]["complaint_priority"]
           reporter_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: Database["public"]["Enums"]["complaint_status"]
           title: string
           updated_at?: string
@@ -129,6 +173,9 @@ export type Database = {
           id?: string
           priority?: Database["public"]["Enums"]["complaint_priority"]
           reporter_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: Database["public"]["Enums"]["complaint_status"]
           title?: string
           updated_at?: string
