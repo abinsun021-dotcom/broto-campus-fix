@@ -1,19 +1,37 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { Calendar, AlertCircle, Tag } from "lucide-react";
+import { Calendar, AlertCircle, Tag, Paperclip, Image, Download, ChevronDown, ChevronUp } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Attachment {
+  id: string;
+  file_name: string;
+  file_path: string;
+  file_type: string;
+  file_size: number;
+}
 
 interface ComplaintCardProps {
   complaint: any;
   getStatusColor: (status: string) => string;
   getStatusIcon: (status: string) => JSX.Element;
+  showAttachments?: boolean;
 }
 
 export default function ComplaintCard({
   complaint,
   getStatusColor,
   getStatusIcon,
+  showAttachments = true,
 }: ComplaintCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [loadingAttachments, setLoadingAttachments] = useState(false);
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "urgent":
@@ -28,6 +46,58 @@ export default function ComplaintCard({
         return "bg-muted text-muted-foreground";
     }
   };
+
+  const fetchAttachments = async () => {
+    if (!showAttachments) return;
+    
+    setLoadingAttachments(true);
+    try {
+      const { data, error } = await supabase
+        .from("attachments")
+        .select("id, file_name, file_path, file_type, file_size")
+        .eq("complaint_id", complaint.id);
+
+      if (error) {
+        console.error("Error fetching attachments:", error);
+        return;
+      }
+
+      setAttachments(data || []);
+
+      // Generate signed URLs for each attachment
+      if (data && data.length > 0) {
+        const urls: Record<string, string> = {};
+        for (const attachment of data) {
+          const { data: signedData, error: signError } = await supabase.storage
+            .from("complaint-attachments")
+            .createSignedUrl(attachment.file_path, 3600); // 1 hour expiry
+
+          if (!signError && signedData) {
+            urls[attachment.id] = signedData.signedUrl;
+          }
+        }
+        setSignedUrls(urls);
+      }
+    } catch (err) {
+      console.error("Error:", err);
+    } finally {
+      setLoadingAttachments(false);
+    }
+  };
+
+  useEffect(() => {
+    if (expanded && attachments.length === 0) {
+      fetchAttachments();
+    }
+  }, [expanded]);
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const isImage = (fileType: string) => fileType.startsWith("image/");
 
   return (
     <Card className="shadow-elegant border-border/50 transition-smooth hover:shadow-xl">
@@ -62,6 +132,112 @@ export default function ComplaintCard({
             <span>{format(new Date(complaint.created_at), "MMM dd, yyyy")}</span>
           </div>
         </div>
+
+        {showAttachments && (
+          <div className="mt-4 pt-4 border-t border-border/50">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setExpanded(!expanded)}
+              className="w-full justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <Paperclip className="w-4 h-4" />
+                View Details & Attachments
+              </span>
+              {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+
+            {expanded && (
+              <div className="mt-4 space-y-4">
+                {/* Full Description */}
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Full Description</h4>
+                  <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                    {complaint.description}
+                  </p>
+                </div>
+
+                {/* Attachments */}
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Attachments</h4>
+                  {loadingAttachments ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : attachments.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No attachments</p>
+                  ) : (
+                    <div className="grid gap-3">
+                      {attachments.map((attachment) => (
+                        <div
+                          key={attachment.id}
+                          className="bg-muted/50 rounded-lg overflow-hidden"
+                        >
+                          {isImage(attachment.file_type) && signedUrls[attachment.id] ? (
+                            <div className="space-y-2">
+                              <img
+                                src={signedUrls[attachment.id]}
+                                alt={attachment.file_name}
+                                className="w-full max-h-64 object-contain bg-background"
+                                onError={(e) => {
+                                  console.error("Image load error for:", attachment.file_name);
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                              <div className="flex items-center justify-between p-2">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Image className="w-4 h-4" />
+                                  <span className="truncate max-w-[200px]">{attachment.file_name}</span>
+                                  <span className="text-muted-foreground">
+                                    ({formatFileSize(attachment.file_size)})
+                                  </span>
+                                </div>
+                                <a
+                                  href={signedUrls[attachment.id]}
+                                  download={attachment.file_name}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Button variant="ghost" size="sm">
+                                    <Download className="w-4 h-4" />
+                                  </Button>
+                                </a>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between p-3">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Paperclip className="w-4 h-4" />
+                                <span className="truncate max-w-[200px]">{attachment.file_name}</span>
+                                <span className="text-muted-foreground">
+                                  ({formatFileSize(attachment.file_size)})
+                                </span>
+                              </div>
+                              {signedUrls[attachment.id] && (
+                                <a
+                                  href={signedUrls[attachment.id]}
+                                  download={attachment.file_name}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Button variant="ghost" size="sm">
+                                    <Download className="w-4 h-4 mr-1" />
+                                    Download
+                                  </Button>
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
