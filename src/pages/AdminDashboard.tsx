@@ -52,20 +52,47 @@ export default function AdminDashboard() {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    
+    // Fetch profiles and user_roles separately since there's no FK relationship
+    const { data: profilesData, error: profilesError } = await supabase
       .from("profiles")
-      .select("*, user_roles(role)")
+      .select("*")
       .order("created_at", { ascending: false });
 
-    if (error) {
+    if (profilesError) {
       toast({
         title: "Error",
         description: "Failed to fetch users",
         variant: "destructive",
       });
-    } else {
-      setUsers(data || []);
+      setLoading(false);
+      return;
     }
+
+    const { data: rolesData, error: rolesError } = await supabase
+      .from("user_roles")
+      .select("user_id, role");
+
+    if (rolesError) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch user roles",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+    // Combine profiles with their roles
+    const usersWithRoles = (profilesData || []).map(profile => {
+      const userRole = rolesData?.find(r => r.user_id === profile.id);
+      return {
+        ...profile,
+        user_roles: userRole ? [{ role: userRole.role }] : []
+      };
+    });
+
+    setUsers(usersWithRoles);
     setLoading(false);
   };
 
