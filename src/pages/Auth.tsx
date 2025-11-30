@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import brotoHelpLogo from "@/assets/broto-help-logo.png";
 
+type AuthMode = "login" | "signup" | "forgot";
+
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -23,7 +25,7 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (mode === "login") {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -41,7 +43,7 @@ export default function Auth() {
           const role = rolesData?.role || "student";
           navigate(`/${role}`);
         }
-      } else {
+      } else if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -59,7 +61,19 @@ export default function Auth() {
           title: "Account created!",
           description: "You can now log in with your credentials.",
         });
-        setIsLogin(true);
+        setMode("login");
+      } else if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Password reset email sent!",
+          description: "Check your inbox for a link to reset your password.",
+        });
+        setMode("login");
       }
     } catch (error: any) {
       toast({
@@ -84,22 +98,36 @@ export default function Auth() {
             />
           </div>
           <p className="text-muted-foreground">
-            24x7 Student Support System
+            Brototype Students Complaint System
           </p>
         </div>
 
         <Card className="shadow-elegant border-border/50">
           <CardHeader>
-            <CardTitle>{isLogin ? "Welcome back" : "Create account"}</CardTitle>
+            {mode === "forgot" && (
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-smooth mb-2 w-fit"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to login
+              </button>
+            )}
+            <CardTitle>
+              {mode === "login" && "Welcome back"}
+              {mode === "signup" && "Create account"}
+              {mode === "forgot" && "Reset password"}
+            </CardTitle>
             <CardDescription>
-              {isLogin
-                ? "Sign in to your account to continue"
-                : "Sign up to submit and track complaints"}
+              {mode === "login" && "Sign in to your account to continue"}
+              {mode === "signup" && "Sign up to submit and track complaints"}
+              {mode === "forgot" && "Enter your email to receive a password reset link"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAuth} className="space-y-4">
-              {!isLogin && (
+              {mode === "signup" && (
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input
@@ -108,7 +136,7 @@ export default function Auth() {
                     placeholder="John Doe"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    required={!isLogin}
+                    required
                     className="transition-smooth"
                   />
                 </div>
@@ -127,39 +155,55 @@ export default function Auth() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="transition-smooth"
-                />
-              </div>
+              {mode !== "forgot" && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className="transition-smooth"
+                  />
+                </div>
+              )}
+
+              {mode === "login" && (
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => setMode("forgot")}
+                    className="text-sm text-primary hover:underline transition-smooth"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
 
               <Button
                 type="submit"
                 className="w-full gradient-primary border-0 transition-smooth hover:opacity-90"
                 disabled={loading}
               >
-                {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
+                {loading ? "Loading..." : mode === "login" ? "Sign In" : mode === "signup" ? "Sign Up" : "Send Reset Link"}
               </Button>
 
-              <div className="text-center text-sm">
-                <button
-                  type="button"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="text-primary hover:underline transition-smooth"
-                >
-                  {isLogin
-                    ? "Don't have an account? Sign up"
-                    : "Already have an account? Sign in"}
-                </button>
-              </div>
+              {mode !== "forgot" && (
+                <div className="text-center text-sm">
+                  <button
+                    type="button"
+                    onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                    className="text-primary hover:underline transition-smooth"
+                  >
+                    {mode === "login"
+                      ? "Don't have an account? Sign up"
+                      : "Already have an account? Sign in"}
+                  </button>
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>
