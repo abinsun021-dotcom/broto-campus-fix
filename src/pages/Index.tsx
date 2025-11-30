@@ -94,7 +94,7 @@ export default function Index() {
             <h2 className="text-5xl md:text-6xl font-bold mb-6 animate-in fade-in slide-in-from-top-6 duration-1000 delay-100">
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Broto-Help 24x7</span>
               <span className="block text-foreground mt-2">
-                Student Support System
+                Brototype Students Complaint System
               </span>
             </h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-in fade-in slide-in-from-top-8 duration-1000 delay-200">
