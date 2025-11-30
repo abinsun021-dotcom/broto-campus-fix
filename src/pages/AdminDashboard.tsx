@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, LogOut, AlertCircle, Clock, CheckCircle, XCircle, Filter, ChevronDown, ChevronUp, Calendar, Tag, Paperclip, Image, Download } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
+import { FileText, LogOut, AlertCircle, Clock, CheckCircle, XCircle, Filter, ChevronDown, ChevronUp, Calendar, Tag, Paperclip, Image, Download, User, History } from "lucide-react";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import DashboardFooter from "@/components/DashboardFooter";
 import { format } from "date-fns";
 import brotoHelpLogo from "@/assets/broto-help-logo.png";
@@ -21,8 +21,18 @@ interface Attachment {
   file_size: number;
 }
 
+interface StatusHistory {
+  id: string;
+  old_status: string | null;
+  new_status: string;
+  changed_by: string;
+  note: string | null;
+  created_at: string;
+  changer_profile?: { full_name: string; email: string };
+}
+
 export default function AdminDashboard() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [complaints, setComplaints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -31,6 +41,7 @@ export default function AdminDashboard() {
   const [expandedComplaint, setExpandedComplaint] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<Record<string, Attachment[]>>({});
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [statusHistory, setStatusHistory] = useState<Record<string, StatusHistory[]>>({});
   const [updateNote, setUpdateNote] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -73,19 +84,77 @@ export default function AdminDashboard() {
     setLoading(true);
     const { data, error } = await supabase
       .from("complaints")
-      .select("*")
+      .select(`
+        *,
+        reporter:profiles!complaints_reporter_id_fkey(id, full_name, email)
+      `)
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch complaints",
-        variant: "destructive",
-      });
+      // Fallback to simple query if join fails
+      const { data: simpleData, error: simpleError } = await supabase
+        .from("complaints")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (simpleError) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch complaints",
+          variant: "destructive",
+        });
+      } else {
+        // Fetch profiles separately
+        const reporterIds = [...new Set(simpleData?.map(c => c.reporter_id) || [])];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", reporterIds);
+        
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        const complaintsWithProfiles = simpleData?.map(c => ({
+          ...c,
+          reporter: profileMap.get(c.reporter_id) || null
+        })) || [];
+        
+        setComplaints(complaintsWithProfiles);
+      }
     } else {
       setComplaints(data || []);
     }
     setLoading(false);
+  };
+
+  const fetchStatusHistory = async (complaintId: string) => {
+    const { data, error } = await supabase
+      .from("complaint_history")
+      .select("*")
+      .eq("complaint_id", complaintId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching status history:", error);
+      return;
+    }
+
+    // Fetch profile info for changers
+    if (data && data.length > 0) {
+      const changerIds = [...new Set(data.map(h => h.changed_by))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", changerIds);
+      
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const historyWithProfiles = data.map(h => ({
+        ...h,
+        changer_profile: profileMap.get(h.changed_by) || null
+      }));
+      
+      setStatusHistory(prev => ({ ...prev, [complaintId]: historyWithProfiles }));
+    } else {
+      setStatusHistory(prev => ({ ...prev, [complaintId]: [] }));
+    }
   };
 
   const fetchAttachments = async (complaintId: string) => {
@@ -205,6 +274,9 @@ export default function AdminDashboard() {
       setExpandedComplaint(complaintId);
       if (!attachments[complaintId]) {
         fetchAttachments(complaintId);
+      }
+      if (!statusHistory[complaintId]) {
+        fetchStatusHistory(complaintId);
       }
     }
   };
@@ -387,6 +459,15 @@ export default function AdminDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
+                  {/* Student Info */}
+                  {complaint.reporter && (
+                    <div className="flex items-center gap-2 text-sm mb-3 p-2 bg-primary/5 rounded-lg">
+                      <User className="w-4 h-4 text-primary" />
+                      <span className="font-medium">{complaint.reporter.full_name}</span>
+                      <span className="text-muted-foreground">({complaint.reporter.email})</span>
+                    </div>
+                  )}
+                  
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                     <div className="flex items-center gap-1.5">
                       <Tag className="w-4 h-4" />
@@ -416,6 +497,42 @@ export default function AdminDashboard() {
                         <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
                           {complaint.description}
                         </p>
+                      </div>
+
+                      {/* Status History */}
+                      <div>
+                        <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                          <History className="w-4 h-4" />
+                          Status History
+                        </h4>
+                        {statusHistory[complaint.id]?.length > 0 ? (
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {statusHistory[complaint.id].map((history) => (
+                              <div key={history.id} className="text-xs bg-muted/30 p-2 rounded-lg">
+                                <div className="flex items-center justify-between mb-1">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {history.old_status || "new"} → {history.new_status}
+                                    </Badge>
+                                  </div>
+                                  <span className="text-muted-foreground">
+                                    {format(new Date(history.created_at), "MMM dd, HH:mm")}
+                                  </span>
+                                </div>
+                                <div className="text-muted-foreground">
+                                  By: {history.changer_profile?.full_name || "System"}
+                                </div>
+                                {history.note && (
+                                  <p className="mt-1 text-foreground bg-background/50 p-1.5 rounded">
+                                    {history.note}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">No status changes recorded yet</p>
+                        )}
                       </div>
 
                       {/* Resolution Info */}
