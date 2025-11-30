@@ -160,10 +160,14 @@ export default function ComplaintCard({
                 <span>{format(new Date(complaint.resolved_at), "MMM dd, yyyy HH:mm")}</span>
               </div>
             </div>
-            {complaint.resolution_note && (
-              <p className="text-sm text-muted-foreground mt-2 bg-background/50 p-2 rounded">
-                {complaint.resolution_note}
-              </p>
+            {/* Admin-only resolution note */}
+            {complaint.resolution_note && (userRole === "admin" || userRole === "staff") && (
+              <div className="mt-2">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Admin Note:</p>
+                <p className="text-sm text-muted-foreground bg-background/50 p-2 rounded">
+                  {complaint.resolution_note}
+                </p>
+              </div>
             )}
           </div>
         )}
