@@ -1,4 +1,6 @@
-# Welcome to your Lovable project
+# Broto-Help 24x7 - Student Support System
+
+24x7 Student complaint management system for Brototype.
 
 ## Project info
 

@@ -11,6 +11,7 @@ import { FileText, LogOut, AlertCircle, Clock, CheckCircle, XCircle, Filter, Che
 import type { User } from "@supabase/supabase-js";
 import DashboardFooter from "@/components/DashboardFooter";
 import { format } from "date-fns";
+import brotoHelpLogo from "@/assets/broto-help-logo.png";
 
 interface Attachment {
   id: string;
@@ -232,11 +233,12 @@ export default function AdminDashboard() {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
+            <img 
+              src={brotoHelpLogo} 
+              alt="Broto-Help 24x7 Logo" 
+              className="h-10 w-auto"
+            />
             <div>
-              <h1 className="text-xl font-bold">BrotoCare</h1>
               <p className="text-sm text-muted-foreground">Admin Dashboard</p>
             </div>
           </div>

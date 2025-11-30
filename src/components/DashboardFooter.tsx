@@ -6,14 +6,15 @@ export default function DashboardFooter() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Powered by</span>
+            <span>© 2025 Broto-Help 24x7</span>
+            <span className="hidden md:inline">•</span>
             <a 
               href="https://brototype.com" 
               target="_blank" 
               rel="noopener noreferrer"
               className="font-semibold text-primary hover:underline transition-colors"
             >
-              Brototype
+              Powered by Brototype
             </a>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
